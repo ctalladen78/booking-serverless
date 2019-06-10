@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  FlyJetOnline Serverless Application
+
+Parameters:
+  FjoIdentityStack:
+    Type: String
+    Default: FjoIdentity
+
+Globals:
+  Function:
+    Timeout: 60
+    Runtime: go1.x
+    MemorySize: 512
+    AutoPublishAlias: dev
+    Environment:
+      Variables:
+        DATABASE_TABLE: FlyJetOnlineDB
+
+Resources:
+  FlyJetOnlineApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: FlyjetOnlineApi
+      StageName: dev
+      Cors:
+        AllowMethods: "'GET,POST,DELETE,PUT'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: FjoAuth
+        Authorizers:
+          FjoAuth:
+            UserPoolArn:
+              Fn::ImportValue:
+                Fn::Sub: ${FjoIdentityStack}-UserPoolID
+            Identity:
+              Header: Authorization
+
+  GetAgent:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main
+      CodeUri: ./
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Scan
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:GetRecords
+                - dynamodb:DeleteItem
+                - dynamodb:UpdateItem
+              Resource: !GetAtt FlyJetOnlineDB.Arn
+      Events:
+        GetAgent:
+          Type: Api
+          Properties:
+            Path: /agent
+            Method: GET
+            RestApiId: !Ref FlyJetOnlineApi
+
+  FlyJetOnlineDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: AgentId
+          AttributeType: S
+        - AttributeName: TicketId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: AgentId
+          KeyType: HASH
+        - AttributeName: TicketId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: FlyJetOnlineDB
