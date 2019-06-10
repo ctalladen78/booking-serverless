@@ -83,6 +83,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - execute-api:Invoke
+                  - lambda:InvokeFunction
                 Resource: "*"
 
   FlyJetOnlineIdentityPool:
