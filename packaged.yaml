@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'FlyJetOnline Serverless Application
+
+  '
+Globals:
+  Function:
+    AutoPublishAlias: dev
+    Environment:
+      Variables:
+        DATABASE_TABLE: FlyJetOnlineDB
+    MemorySize: 512
+    Runtime: go1.x
+    Timeout: 60
+Parameters:
+  FjoIdentityStack:
+    Default: FjoIdentity
+    Type: String
+Resources:
+  FlyJetOnlineApi:
+    Properties:
+      Auth:
+        DefaultAuthorizer: AWS_IAM
+      Cors:
+        AllowMethods: '''GET,POST,DELETE,PUT'''
+        AllowOrigin: '''*'''
+      Name: FlyjetOnlineApi
+      StageName: dev
+    Type: AWS::Serverless::Api
+  FlyJetOnlineDB:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: AgentId
+        AttributeType: S
+      - AttributeName: TicketId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: AgentId
+        KeyType: HASH
+      - AttributeName: TicketId
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: FlyJetOnlineDB
+    Type: AWS::DynamoDB::Table
+  GetAgent:
+    Properties:
+      CodeUri: s3://awscloudexam2018/b1115260c76964e268d37af25bfc8b34
+      Events:
+        GetAgent:
+          Properties:
+            Method: GET
+            Path: /agent
+            RestApiId:
+              Ref: FlyJetOnlineApi
+          Type: Api
+      Handler: main
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+        - Action:
+          - dynamodb:Scan
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:Query
+          - dynamodb:GetRecords
+          - dynamodb:DeleteItem
+          - dynamodb:UpdateItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - FlyJetOnlineDB
+            - Arn
+        Version: 2012-10-17
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
