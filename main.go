@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"encoding/json"
 
+	core "github.com/awslabs/aws-lambda-go-api-proxy/core"
 	gMuxAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gorillamux"
 	"github.com/gorilla/mux"
 
@@ -48,10 +50,9 @@ type Item struct {
 func GetAgent(w http.ResponseWriter, r *http.Request) {
 	tableName := os.Getenv("DATABASE_TABLE")
 	log.Printf("%v", r)
-	apiGwContext, err := muxLambda.GetAPIGatewayContext(r)
-	if err != nil {
-		log.Println(err.Error())
-		fmt.Fprint(w, err.Error())
+	apiGwContext, ok := core.GetAPIGatewayContextFromContext(r.Context())
+	if !ok {
+		log.Println("Api Gateway Context Not Found!")
 		return
 	}
 	userId := apiGwContext.Identity.CognitoIdentityID
@@ -95,5 +96,10 @@ func GetAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Result: %v", item)
+	b, err := json.Marshal(&item)
+	if err != nil {
+		log.Printf("Couldn't marshal dynamodb query results: %s", err)
+		return
+	}
+	fmt.Fprintf(w, "Result: %s", b)
 }

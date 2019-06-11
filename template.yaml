@@ -29,14 +29,14 @@ Resources:
         AllowMethods: "'GET,POST,DELETE,PUT'"
         AllowOrigin: "'*'"
       Auth:
-        DefaultAuthorizer: FjoAuth
-        Authorizers:
-          FjoAuth:
-            UserPoolArn:
-              Fn::ImportValue:
-                Fn::Sub: ${FjoIdentityStack}-UserPoolID
-            Identity:
-              Header: Authorization
+        DefaultAuthorizer: AWS_IAM
+        #Authorizers:
+        #  FjoAuth:
+        #    UserPoolArn:
+        #      Fn::ImportValue:
+        #        Fn::Sub: ${FjoIdentityStack}-UserPoolID
+        #    Identity:
+        #      Header: Authorization
 
   GetAgent:
     Type: AWS::Serverless::Function
