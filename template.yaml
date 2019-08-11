@@ -2,12 +2,12 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
 Description: >
-  FlyJetOnline Serverless Application
+  FlyOnline Serverless Application
 
 Parameters:
-  FjoIdentityStack:
+  FoIdentityStack:
     Type: String
-    Default: FjoIdentity
+    Default: FoIdentity
 
 Globals:
   Function:
@@ -17,13 +17,13 @@ Globals:
     AutoPublishAlias: dev
     Environment:
       Variables:
-        DATABASE_TABLE: FlyJetOnlineDB
+        DATABASE_TABLE: FlyOnlineDB
 
 Resources:
-  FlyJetOnlineApi:
+  FlyOnlineApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: FlyjetOnlineApi
+      Name: FlyOnlineApi
       StageName: dev
       Cors:
         AllowMethods: "'GET,POST,DELETE,PUT'"
@@ -31,14 +31,14 @@ Resources:
       Auth:
         DefaultAuthorizer: AWS_IAM
         #Authorizers:
-        #  FjoAuth:
+        #  FoAuth:
         #    UserPoolArn:
         #      Fn::ImportValue:
-        #        Fn::Sub: ${FjoIdentityStack}-UserPoolID
+        #        Fn::Sub: ${FoIdentityStack}-UserPoolID
         #    Identity:
         #      Header: Authorization
 
-  GetAgent:
+  GetItem:
     Type: AWS::Serverless::Function
     Properties:
       Handler: main
@@ -56,29 +56,29 @@ Resources:
                 - dynamodb:GetRecords
                 - dynamodb:DeleteItem
                 - dynamodb:UpdateItem
-              Resource: !GetAtt FlyJetOnlineDB.Arn
+              Resource: !GetAtt FlyOnlineDB.Arn
       Events:
-        GetAgent:
+        GetItem:
           Type: Api
           Properties:
-            Path: /agent
+            Path: /item
             Method: GET
-            RestApiId: !Ref FlyJetOnlineApi
+            RestApiId: !Ref FlyOnlineApi
 
-  FlyJetOnlineDB:
+  FlyOnlineDB:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: AgentId
+        - AttributeName: ItemId
           AttributeType: S
         - AttributeName: TicketId
           AttributeType: S
       KeySchema:
-        - AttributeName: AgentId
+        - AttributeName: ItemId
           KeyType: HASH
         - AttributeName: TicketId
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      TableName: FlyJetOnlineDB
+      TableName: FlyOnlineDB

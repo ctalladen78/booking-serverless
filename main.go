@@ -28,7 +28,7 @@ func init() {
 	log.Println("Mux Cold Start")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/agent", GetAgent)
+	r.HandleFunc("/agent", GetItem)
 
 	muxLambda = gMuxAdapter.New(r)
 }
@@ -43,11 +43,11 @@ func main() {
 }
 
 type Item struct {
-	AgentId  string `json:"agentId"`
+	ItemId  string `json:"itemId"`
 	TicketId string `json:"ticketId"`
 }
 
-func GetAgent(w http.ResponseWriter, r *http.Request) {
+func GetItem(w http.ResponseWriter, r *http.Request) {
 	tableName := os.Getenv("DATABASE_TABLE")
 	log.Printf("%v", r)
 	apiGwContext, ok := core.GetAPIGatewayContextFromContext(r.Context())
@@ -64,7 +64,7 @@ func GetAgent(w http.ResponseWriter, r *http.Request) {
 	result, err := svc.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
-			"AgentId": {
+			"ItemId": {
 				S: aws.String(userId),
 			},
 			"TicketId": {
